@@ -373,7 +373,7 @@ contains
             units='proportion', &
             avgflag='A', &
             long_name=this%info%lname('fraction of canopy that is wet'), &
-            ptr_patch=this%fcansno_patch, default='inactive')
+            ptr_patch=this%fcansno_patch)!, default='inactive')
     end if
 
     if (use_cn) then

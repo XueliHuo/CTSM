@@ -200,7 +200,8 @@ contains
        this%hbot_patch(begp:endp) = spval
        call hist_addfld1d (fname='HBOT', units='m', &
             avgflag='A', long_name='canopy bottom', &
-            ptr_patch=this%hbot_patch, default='inactive')
+            ptr_patch=this%hbot_patch)
+!            ptr_patch=this%hbot_patch, default='inactive')
 
        this%displa_patch(begp:endp) = spval
        call hist_addfld1d (fname='DISPLA', units='m', &
