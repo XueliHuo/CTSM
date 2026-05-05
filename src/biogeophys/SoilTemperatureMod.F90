@@ -27,6 +27,7 @@ module SoilTemperatureMod
   use LandunitType            , only : lun
   use ColumnType              , only : col
   use PatchType               , only : patch
+!  use GetGlobalValuesMod, only : GetGlobalIndex, GetGlobalWrite
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -370,6 +371,11 @@ contains
 
          ! soil layers; top layer will have one offset and one extra coefficient
          tvector(c,1:nlevgrnd) = t_soisno(c,1:nlevgrnd)
+!       if ( GetGlobalIndex(c,'column') == 1999 ) then
+!           write(iulog,*) "SoilTemperature before update:"
+!           write(iulog,*) 'tvector = ',tvector(c,1)
+!           write(iulog,*) 't_soisno = ',t_soisno(c,1)
+!       endif
 
       enddo
 
@@ -390,6 +396,11 @@ contains
             t_soisno(c,j) = tvector(c,j-1) !snow layers
          end do
          t_soisno(c,1:nlevgrnd)   = tvector(c,1:nlevgrnd)  !soil layers
+!       if ( GetGlobalIndex(c,'column') == 1999 ) then
+!           write(iulog,*) "SoilTemperature after update:"
+!           write(iulog,*) 't_soisno = ',t_soisno(c,1)
+!           write(iulog,*) 'tvector = ',tvector(c,1)
+!       endif
 
          if (frac_h2osfc(c) == 0._r8) then
             t_h2osfc(c)=t_soisno(c,1)
@@ -512,6 +523,16 @@ contains
                t_grnd(c) = t_soisno(c,1)
             end if
          endif
+!       if ( GetGlobalIndex(c,'column') == 1378 ) then
+!           write(iulog,*) "SoilTemperature:"
+!           write(iulog,*) 'snl = ',snl(c)
+!           write(iulog,*) 'frac_sno_eff = ',frac_sno_eff(c)
+!           write(iulog,*) 't_soisno = ',t_soisno(c,snl(c)+1)
+!           write(iulog,*) 'frac_h2osfc = ',frac_h2osfc(c)
+!           write(iulog,*) 't_soisno(c,1) = ',t_soisno(c,1)
+!           write(iulog,*) 't_h2osfc = ',t_h2osfc(c)
+!           write(iulog,*) 't_grnd = ',t_grnd(c)
+!       endif
       end do
 
       ! Initialize soil heat content
@@ -717,6 +738,14 @@ contains
                if (j >= snl(c)+1 .AND. j <= nlevgrnd-1) then
                   tk(c,j) = thk(c,j)*thk(c,j+1)*(z(c,j+1)-z(c,j)) &
                        /(thk(c,j)*(z(c,j+1)-zi(c,j))+thk(c,j+1)*(zi(c,j)-z(c,j)))
+!       if ( GetGlobalIndex(c,'column') == 1378 ) then
+!           write(iulog,*) "Thermal conductivity:"
+!           write(iulog,*) 'j = ',j
+!           write(iulog,*) 'tk = ',tk(c,j)
+!           write(iulog,*) 'z(c,j+1) = ',z(c,j+1)
+!           write(iulog,*) 'zi(c,j) = ',zi(c,j)
+!           write(iulog,*) 'z(c,j) = ',z(c,j)
+!       endif
                else if (j == nlevgrnd) then
                   tk(c,j) = 0._r8
                end if
@@ -901,7 +930,16 @@ contains
                ! add ice to snow column
                int_snow(c) = int_snow(c) - xm(c)
                if (snl(c) == 0) then
+!       if ( GetGlobalIndex(c,'column') == 1715 ) then
+!           write(iulog,*) 'PhaseChangeH2osfc:'
+!           write(iulog,*) 'xm ',xm(c)
+!           write(iulog,*) 'h2osno_no_layers ',h2osno_no_layers(c)
+!       endif
                   h2osno_no_layers(c) = h2osno_no_layers(c) - xm(c)
+!       if ( GetGlobalIndex(c,'column') == 1715 ) then
+!           write(iulog,*) 'PhaseChangeH2osfc:'
+!           write(iulog,*) 'h2osno_no_layers ',h2osno_no_layers(c)
+!       endif
                else
                   h2osoi_ice(c,0) = h2osoi_ice(c,0) - xm(c)
                end if
@@ -949,7 +987,16 @@ contains
                rho_avg=(h2osno_total(c)*rho_avg + h2osfc(c)*denice)/(h2osno_total(c) + h2osfc(c))
                int_snow(c) = int_snow(c) + h2osfc(c)
                if (snl(c) == 0) then
+!       if ( GetGlobalIndex(c,'column') == 1715 ) then
+!           write(iulog,*) 'PhaseChangeH2osfc:'
+!           write(iulog,*) 'h2osfc ',h2osfc(c)
+!           write(iulog,*) 'h2osno_no_layers ',h2osno_no_layers(c)
+!       endif
                   h2osno_no_layers(c) = h2osno_no_layers(c) + h2osfc(c)
+!       if ( GetGlobalIndex(c,'column') == 1715 ) then
+!           write(iulog,*) 'PhaseChangeH2osfc:'
+!           write(iulog,*) 'h2osno_no_layers ',h2osno_no_layers(c)
+!       endif
                else
                   h2osoi_ice(c,0) = h2osoi_ice(c,0) + h2osfc(c)
                end if
@@ -1209,6 +1256,12 @@ contains
                ! If snow exists, but its thickness is less than the critical value (0.01 m)
                if (h2osno_no_layers(c) > 0._r8 .AND. j == 1) then
                   if (t_soisno(c,j) > tfrz) then
+!       if ( GetGlobalIndex(c,'column') == 1715 ) then
+!           write(iulog,*) 'Phasechange_beta:'
+!           write(iulog,*) 'h2osno_no_layers ',h2osno_no_layers(c)
+!           write(iulog,*) 't_soisno ',t_soisno(c,j)
+!           write(iulog,*) 'tfrz ',tfrz
+!       endif
                      imelt(c,j) = 1
                      !                tincc,j) = t_soisno(c,j) - tfrz
                      tinc(c,j) = tfrz - t_soisno(c,j)
@@ -1241,12 +1294,21 @@ contains
                      if (j == snl(c)+1) then ! top layer                   
                         if(j > 0) then
                            hm(c,j) = dhsdT(c)*tinc(c,j) - tinc(c,j)/fact(c,j)
+!       if ( GetGlobalIndex(c,'column') == 1715 ) then
+!           write(iulog,*) 'Phasechange_beta: j==snl(c)+1'
+!           write(iulog,*) 'hm ',hm(c,j)
+!       endif
                         else
                            hm(c,j) = frac_sno_eff(c)*(dhsdT(c)*tinc(c,j) - tinc(c,j)/fact(c,j))
                         endif
 
                         if ( j==1 .and. frac_h2osfc(c) /= 0.0_r8 ) then
                            hm(c,j) = hm(c,j) - frac_h2osfc(c)*(dhsdT(c)*tinc(c,j))
+!       if ( GetGlobalIndex(c,'column') == 1715 ) then
+!           write(iulog,*) 'Phasechange_beta: j==snl(c)+1'
+!           write(iulog,*) 'frac_h2osfc ',frac_h2osfc(c)
+!           write(iulog,*) 'hm ',hm(c,j)
+!       endif
                         end if
                      else if (j == 1) then
                         hm(c,j) = (1.0_r8 - frac_sno_eff(c) - frac_h2osfc(c)) &
@@ -1275,6 +1337,10 @@ contains
 
                   if (imelt(c,j) > 0 .and. abs(hm(c,j)) > 0._r8) then
                      xm(c,j) = hm(c,j)*dtime/hfus                           ! kg/m2
+!       if ( GetGlobalIndex(c,'column') == 1715 ) then
+!           write(iulog,*) 'Phasechange_beta: xm'
+!           write(iulog,*) 'xm ',xm(c,j)
+!       endif
 
                      ! If snow exists, but its thickness is less than the critical value
                      ! (1 cm). Note: more work is needed to determine how to tune the
@@ -1294,6 +1360,13 @@ contains
                               hm(c,j) = 0._r8
                            endif
                            qflx_snomelt(c) = max(0._r8,(temp1-h2osno_no_layers(c)))/dtime   ! kg/(m2 s)
+!       if ( GetGlobalIndex(c,'column') == 1715 ) then
+!           write(iulog,*) 'Phasechange_beta:'
+!           write(iulog,*) 'temp1 ',temp1
+!           write(iulog,*) 'h2osno_no_layers ',h2osno_no_layers(c)
+!           write(iulog,*) 'xm ',xm(c,j)
+!           write(iulog,*) 'hm ',hm(c,j)
+!       endif
                            ! no snow layers, so qflx_snomelt_lyr is not set
                            xmf(c) = hfus*qflx_snomelt(c)
                            qflx_snow_drain(c) = qflx_snomelt(c) 
@@ -1323,8 +1396,19 @@ contains
                         if (j == snl(c)+1) then
 
                            if(j==1) then
+!       if ( GetGlobalIndex(c,'column') == 1715 ) then
+!           write(iulog,*) 'Phasechange_beta:'
+!           write(iulog,*) 'heatr ',heatr
+!           write(iulog,*) 'h2osoi_ice ',h2osoi_ice(c,j)
+!           write(iulog,*) 'h2osoi_liq ',h2osoi_liq(c,j)
+!           write(iulog,*) 't_soisno ',t_soisno(c,j)
+!       endif
                               t_soisno(c,j) = t_soisno(c,j) + fact(c,j)*heatr &
                                    /(1._r8-(1.0_r8 - frac_h2osfc(c))*fact(c,j)*dhsdT(c))
+!       if ( GetGlobalIndex(c,'column') == 1715 ) then
+!           write(iulog,*) 'Phasechange_beta:'
+!           write(iulog,*) 't_soisno ',t_soisno(c,j)
+!       endif
                            else
                               t_soisno(c,j) = t_soisno(c,j) + (fact(c,j)/frac_sno_eff(c))*heatr &
                                    /(1._r8-fact(c,j)*dhsdT(c))
@@ -1547,6 +1631,20 @@ contains
                      eflx_gnet_soil = sabg_soil(p) + dlrad(p) &
                           + (1._r8-frac_veg_nosno(p))*emg(c)*forc_lwrad(c) - lwrad_emit_soil(c) &
                           - (eflx_sh_soil(p)+qflx_ev_soil(p)*htvp(c))
+!       if ( GetGlobalIndex(c,'column') == 1999 ) then
+!           write(iulog,*) "ComputeGroundHeatFluxAndDeriv:"
+!           call GetGlobalWrite(p,'pft')
+!           write(iulog,*) 'eflx_gnet_soil = ',eflx_gnet_soil
+!           write(iulog,*) 'sabg_soil = ',sabg_soil(p)
+!           write(iulog,*) 'dlrad = ',dlrad(p)
+!           write(iulog,*) 'frac_veg_nosno = ',frac_veg_nosno(p)
+!           write(iulog,*) 'emg = ',emg(c)
+!           write(iulog,*) 'forc_lwrad = ',forc_lwrad(c)
+!           write(iulog,*) 'lwrad_emit_soil = ',lwrad_emit_soil(c)
+!           write(iulog,*) 'eflx_sh_soil = ',eflx_sh_soil(p)
+!           write(iulog,*) 'qflx_ev_soil = ',qflx_ev_soil(p)
+!           write(iulog,*) 'htvp = ',htvp(c)
+!       endif
 
                      eflx_gnet_h2osfc = sabg_soil(p) + dlrad(p) &
                           + (1._r8-frac_veg_nosno(p))*emg(c)*forc_lwrad(c) - lwrad_emit_h2osfc(c) &
@@ -1582,6 +1680,13 @@ contains
                   hs(c) = hs(c) + eflx_gnet(p) * patch%wtcol(p)
                   dhsdT(c) = dhsdT(c) + dgnetdT(p) * patch%wtcol(p)
                   ! separate surface fluxes for soil/snow
+!       if ( GetGlobalIndex(c,'column') == 1999 ) then
+!           write(iulog,*) "ComputeGroundHeatFluxAndDeriv:"
+!           write(iulog,*) 'hs_soil = ',hs_soil(c)
+!           write(iulog,*) 'eflx_gnet_soil = ',eflx_gnet_soil
+!           call GetGlobalWrite(p,'pft')
+!           write(iulog,*) 'patch%wtcol = ',patch%wtcol(p)
+!       endif
                   hs_soil(c) = hs_soil(c) + eflx_gnet_soil * patch%wtcol(p)
                   hs_h2osfc(c) = hs_h2osfc(c) + eflx_gnet_h2osfc * patch%wtcol(p)
 
@@ -1627,6 +1732,13 @@ contains
                           - lwrad_emit_soil(c) - (eflx_sh_soil(p)+qflx_ev_soil(p)*htvp(c))
 
                      hs_top_snow(c) = hs_top_snow(c) + eflx_gnet_snow*patch%wtcol(p)
+!       if ( GetGlobalIndex(c,'column') == 1378 ) then
+!           write(iulog,*) "ComputeGroundHeatFluxAndDeriv:"
+!           write(iulog,*) 'p = ',GetGlobalIndex(p,'pft')
+!           write(iulog,*) 'patch%wtcol = ',patch%wtcol(p)
+!           write(iulog,*) 'eflx_gnet_snow = ',eflx_gnet_snow
+!           write(iulog,*) 'hs_top_snow = ',hs_top_snow(c)
+!       endif
 
                      do j = lyr_top,1,1
                         sabg_lyr_col(c,j) = sabg_lyr_col(c,j) + sabg_lyr(p,j) * patch%wtcol(p)
@@ -1745,6 +1857,16 @@ contains
                   if (j == col%snl(c)+1) then
                      fact(c,j) = dtime/cv(c,j) * dz(c,j) / (0.5_r8*(z(c,j)-zi(c,j-1)+capr*(z(c,j+1)-zi(c,j-1))))
                      fn(c,j) = tk(c,j)*(t_soisno(c,j+1)-t_soisno(c,j))/(z(c,j+1)-z(c,j))
+!       if ( GetGlobalIndex(c,'column') == 1378 ) then
+!           write(iulog,*) "ComputeHeatDiffFluxAndFactor:"
+!           write(iulog,*) 'j = ',j
+!           write(iulog,*) 'tk = ',tk(c,j)
+!           write(iulog,*) 't_soisno = ',t_soisno(c,j+1)
+!           write(iulog,*) 't_soisno = ',t_soisno(c,j)
+!           write(iulog,*) 'z = ',z(c,j+1)
+!           write(iulog,*) 'z = ',z(c,j)
+!           write(iulog,*) 'fn = ',fn(c,j)
+!       endif
                   else if (j <= nlevgrnd-1) then
                      fact(c,j) = dtime/cv(c,j)
                      fn(c,j) = tk(c,j)*(t_soisno(c,j+1)-t_soisno(c,j))/(z(c,j+1)-z(c,j))

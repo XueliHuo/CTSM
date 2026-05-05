@@ -24,6 +24,7 @@ module SnowCoverFractionSwensonLawrence2012Mod
   use landunit_varcon, only : istice_mec
   use paramUtilMod   , only : readNcdioScalar
   use SnowCoverFractionBaseMod, only : snow_cover_fraction_base_type
+!  use GetGlobalValuesMod, only : GetGlobalIndex, GetGlobalWrite
 
   implicit none
   save
@@ -119,6 +120,10 @@ contains
 
        !======================  FSCA PARAMETERIZATIONS  ======================
        ! fsca parameterization based on *changes* in swe
+!       if (GetGlobalIndex(c,'column') == 1715) then
+!           write(iulog,*) 'h2osno_total = ',h2osno_total(c)
+!           write(iulog,*) 'newsnow = ',newsnow(c)
+!       endif
        if (h2osno_total(c) == 0._r8) then
           if (newsnow(c) > 0._r8) then
              frac_sno(c) = tanh(this%accum_factor * newsnow(c))
@@ -128,14 +133,25 @@ contains
              ! elsewhere rather than here.
              frac_sno(c) = 0._r8
           end if
+!       if (GetGlobalIndex(c,'column') == 1715) then
+!           write(iulog,*) 'h2osno_total = 0:'
+!           write(iulog,*) 'frac_sno = ',frac_sno(c)
+!       endif
 
        else ! h2osno_total(c) > 0
+!       if (GetGlobalIndex(c,'column') == 1715) then
+!           write(iulog,*) 'snowmelt = ',snowmelt(c)
+!       endif
           if (snowmelt(c) > 0._r8) then
              ! first compute change from melt during previous time step
              frac_sno(c) = this%FracSnowDuringMelt( &
                   c            = c, &
                   h2osno_total = h2osno_total(c), &
                   int_snow     = int_snow(c))
+!       if (GetGlobalIndex(c,'column') == 1715) then
+!           write(iulog,*) 'snowmelt > 0:'
+!           write(iulog,*) 'frac_sno = ',frac_sno(c)
+!       endif
           end if
 
           if (newsnow(c) > 0._r8) then
@@ -146,10 +162,28 @@ contains
              !
              ! This form is algebraically equivalent, but simpler and less prone to
              ! roundoff errors (see https://github.com/ESCOMP/ctsm/issues/784)
+!       if (GetGlobalIndex(c,'column') == 1715) then
+!           write(iulog,*) 'h2osno_total > 0 and newsnow >0:'
+!           write(iulog,*) 'newsnow = ',newsnow(c)
+!           write(iulog,*) 'frac_sno = ',frac_sno(c)
+!       endif
              frac_sno(c) = frac_sno(c) + tanh(this%accum_factor * newsnow(c)) * (1._r8 - frac_sno(c))
+!       if (GetGlobalIndex(c,'column') == 1715) then
+!           write(iulog,*) 'h2osno_total > 0 and newsnow >0:'
+!           write(iulog,*) 'accum_factor = ',this%accum_factor
+!           write(iulog,*) 'frac_sno = ',frac_sno(c)
+!       endif
 
           end if
        end if
+!       if (GetGlobalIndex(c,'column') == 1378) then
+!           write(iulog,*) 'SwensonLawrence2012 snow fraction debugging. The column identified is:'
+!           call GetGlobalWrite(c,'column')
+!           write(iulog,*) 'h2osno_total = ',h2osno_total(c)
+!           write(iulog,*) 'newsnow = ',newsnow(c)
+!           write(iulog,*) 'snowmelt = ',snowmelt(c)
+!           write(iulog,*) 'frac_sno = ',frac_sno(c)
+!       endif
     end do
 
     call this%CalcFracSnoEff(bounds, num_c, filter_c, &
@@ -167,19 +201,48 @@ contains
 
        if (h2osno_total(c) > 0.0_r8) then
           if (frac_sno_eff(c) > 0._r8)then
+!       if (GetGlobalIndex(c,'column') == 1715) then
+!           write(iulog,*) 'h2osno_total > 0 and frac_sno_eff > 0'
+!           write(iulog,*) 'snow_depth = ',snow_depth(c)
+!           write(iulog,*) 'newsnow = ',newsnow(c)
+!           write(iulog,*) 'bifall = ',bifall(c)
+!           write(iulog,*) 'frac_sno_eff = ',frac_sno_eff(c)
+!       endif
              snow_depth(c)=snow_depth(c) + newsnow(c)/(bifall(c) * frac_sno_eff(c))
           else
              snow_depth(c)=0._r8
           end if
+!       if (GetGlobalIndex(c,'column') == 1715) then
+!           write(iulog,*) 'snow_depth = ',snow_depth(c)
+!       endif
 
        else ! h2osno_total == 0
           if (newsnow(c) > 0._r8) then
              z_avg = newsnow(c)/bifall(c)
              snow_depth(c) = z_avg/frac_sno_eff(c)
+!       if (GetGlobalIndex(c,'column') == 1715) then
+!           write(iulog,*) 'h2osno_total = 0 and newsnow > 0'
+!           write(iulog,*) 'newsnow = ',newsnow(c)
+!           write(iulog,*) 'bifall = ',bifall(c)
+!           write(iulog,*) 'frac_sno_eff = ',frac_sno_eff(c)
+!           write(iulog,*) 'snow_depth = ',snow_depth(c)
+!       endif
           else
              snow_depth(c) = 0._r8
           end if
+!       if (GetGlobalIndex(c,'column') == 1715) then
+!           write(iulog,*) 'snow_depth = ',snow_depth(c)
+!       endif
        end if
+!       if (GetGlobalIndex(c,'column') == 1378) then
+!           write(iulog,*) 'SwensonLawrence2012 snow depth. The column identified is:'
+!           call GetGlobalWrite(c,'column')
+!           write(iulog,*) 'h2osno_total = ',h2osno_total(c)
+!           write(iulog,*) 'newsnow = ',newsnow(c)
+!           write(iulog,*) 'bifall = ',bifall(c)
+!           write(iulog,*) 'frac_sno_eff = ',frac_sno_eff(c)
+!           write(iulog,*) 'snow_depth = ',snow_depth(c)
+!       endif
     end do
 
     end associate

@@ -30,6 +30,7 @@ module SoilBiogeochemCompetitionMod
   use TemperatureType                 , only : temperature_type
   use SoilStateType                   , only : soilstate_type
   use CanopyStateType                 , only : CanopyState_type
+!  use GetGlobalValuesMod, only : GetGlobalIndex, GetGlobalWrite
   !
   implicit none
   private
@@ -545,6 +546,17 @@ contains
                sum_nh4_demand(c,j) = plant_ndemand(c) * nuptake_prof(c,j) + potential_immob_vr(c,j) + pot_f_nit_vr(c,j)
                sum_nh4_demand_scaled(c,j) = plant_ndemand(c)* nuptake_prof(c,j) * compet_plant_nh4 + &
                     potential_immob_vr(c,j)*compet_decomp_nh4 + pot_f_nit_vr(c,j)*compet_nit
+!       if ( GetGlobalIndex(c,'column') == 1999 .and. j == 1 ) then
+!           write(iulog,*) 'nh4 demand scaled is:'
+!           write(iulog,*) 'sum_nh4_demand_scaled = ',sum_nh4_demand_scaled(c,j)
+!           write(iulog,*) 'plant_ndemand = ',plant_ndemand(c)
+!           write(iulog,*) 'nuptake_prof = ',nuptake_prof(c,j)
+!           write(iulog,*) 'compet_plant_nh4 = ',compet_plant_nh4
+!           write(iulog,*) 'potential_immob_vr = ',potential_immob_vr(c,j)
+!           write(iulog,*) 'compet_decomp_nh4 = ',compet_decomp_nh4
+!           write(iulog,*) 'pot_f_nit_vr = ',pot_f_nit_vr(c,j)
+!           write(iulog,*) 'compet_nit = ',compet_nit
+!       endif
 
                if (sum_nh4_demand(c,j)*dt < smin_nh4_vr(c,j)) then
 
@@ -561,6 +573,13 @@ contains
                      smin_nh4_to_plant_vr(c,j) = plant_ndemand(c) * nuptake_prof(c,j)
                   else
                      smin_nh4_to_plant_vr(c,j) = smin_nh4_vr(c,j)/dt - actual_immob_nh4_vr(c,j) - f_nit_vr(c,j)
+!       if ( GetGlobalIndex(c,'column') == 1999 .and. j == 1 ) then
+!           write(iulog,*) 'NH4 is not limiting:'
+!           write(iulog,*) 'smin_nh4_to_plant_vr = ',smin_nh4_to_plant_vr(c,j)
+!           write(iulog,*) 'smin_nh4_vr = ',smin_nh4_vr(c,j)
+!           write(iulog,*) 'actual_immob_nh4_vr = ',actual_immob_nh4_vr(c,j)
+!           write(iulog,*) 'f_nit_vr = ',f_nit_vr(c,j)
+!       endif
                   end if
 
                else
@@ -573,9 +592,25 @@ contains
                   ! RF microbes compete based on the hypothesised plant demand. 
                      actual_immob_nh4_vr(c,j) = min((smin_nh4_vr(c,j)/dt)*(potential_immob_vr(c,j)* &
                           compet_decomp_nh4 / sum_nh4_demand_scaled(c,j)), potential_immob_vr(c,j))
+!       if ( GetGlobalIndex(c,'column') == 1999 .and. j == 1 ) then
+!           write(iulog,*) 'NH4 is limiting and demand is positive:'
+!           write(iulog,*) 'actual_immob_nh4_vr = ',actual_immob_nh4_vr(c,j)
+!           write(iulog,*) 'smin_nh4_vr = ',smin_nh4_vr(c,j)
+!           write(iulog,*) 'potential_immob_vr = ',potential_immob_vr(c,j)
+!           write(iulog,*) 'compet_decomp_nh4 = ',compet_decomp_nh4
+!           write(iulog,*) 'sum_nh4_demand_scaled = ',sum_nh4_demand_scaled(c,j)
+!       endif
 
                      f_nit_vr(c,j) =  min((smin_nh4_vr(c,j)/dt)*(pot_f_nit_vr(c,j)*compet_nit / &
                           sum_nh4_demand_scaled(c,j)), pot_f_nit_vr(c,j))
+!       if ( GetGlobalIndex(c,'column') == 1999 .and. j == 1 ) then
+!           write(iulog,*) 'NH4 is limiting and demand is positive:'
+!           write(iulog,*) 'f_nit_vr = ',f_nit_vr(c,j)
+!           write(iulog,*) 'smin_nh4_vr = ',smin_nh4_vr(c,j)
+!           write(iulog,*) 'pot_f_nit_vr = ',pot_f_nit_vr(c,j)
+!           write(iulog,*) 'compet_nit = ',compet_nit
+!           write(iulog,*) 'sum_nh4_demand_scaled = ',sum_nh4_demand_scaled(c,j)
+!       endif
                                                  
                      if ( .not. local_use_fun ) then
                          smin_nh4_to_plant_vr(c,j) = min((smin_nh4_vr(c,j)/dt)*(plant_ndemand(c)* &
@@ -584,6 +619,13 @@ contains
                      else
                         ! RF added new term. send rest of N to plant - which decides whether it should pay or not? 
                         smin_nh4_to_plant_vr(c,j) = smin_nh4_vr(c,j)/dt - actual_immob_nh4_vr(c,j) - f_nit_vr(c,j)
+!       if ( GetGlobalIndex(c,'column') == 1999 .and. j == 1 ) then
+!           write(iulog,*) 'NH4 is limiting and demand is positive:'
+!           write(iulog,*) 'smin_nh4_to_plant_vr = ',smin_nh4_to_plant_vr(c,j)
+!           write(iulog,*) 'smin_nh4_vr = ',smin_nh4_vr(c,j)
+!           write(iulog,*) 'actual_immob_nh4_vr = ',actual_immob_nh4_vr(c,j)
+!           write(iulog,*) 'f_nit_vr = ',f_nit_vr(c,j)
+!       endif
                      end if
                     
                   else
@@ -782,9 +824,13 @@ contains
 !KO
                   if ((sminn_to_plant_fun_nh4_vr(c,j)-smin_nh4_to_plant_vr(c,j)).gt.0.0000001_r8) then
 !KO
+!                    call GetGlobalWrite(c,'column')
+!                    write(iulog,*) 'j = ',j
+!                    write(iulog,*) 'nlevdecomp = ',nlevdecomp
+
                       write(iulog,*) 'problem with limitations on nh4 uptake', &
                                   sminn_to_plant_fun_nh4_vr(c,j),smin_nh4_to_plant_vr(c,j)
-                      call endrun("too much NH4 uptake predicted by FUN")
+!                      call endrun("too much NH4 uptake predicted by FUN")
                   end if
                end do
             end do

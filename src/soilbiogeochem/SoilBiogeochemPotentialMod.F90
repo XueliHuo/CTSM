@@ -17,6 +17,7 @@ module SoilBiogeochemPotentialMod
   use SoilBiogeochemNitrogenStateType    , only : soilbiogeochem_nitrogenstate_type
   use SoilBiogeochemNitrogenFluxType     , only : soilbiogeochem_nitrogenflux_type
   use clm_varctl                         , only : use_fates, iulog
+  use GetGlobalValuesMod, only : GetGlobalIndex, GetGlobalWrite
   !
   implicit none
   private
@@ -174,8 +175,19 @@ contains
 
                if (decomp_cpools_vr(c,j,cascade_donor_pool(k)) > 0._r8 .and. &
                     decomp_k(c,j,cascade_donor_pool(k)) > 0._r8 ) then
+!       if ( GetGlobalIndex(c,'column') == 1999 .and. j == 1 .and. k==1 ) then
+!           write(iulog,*) 'fraction of the carbon loss:'
+!           write(iulog,*) 'p_decomp_cpool_loss = ',p_decomp_cpool_loss(c,j,k)
+!           write(iulog,*) 'decomp_cpools_vr = ',decomp_cpools_vr(c,j,cascade_donor_pool(k))
+!           write(iulog,*) 'decomp_k = ',decomp_k(c,j,cascade_donor_pool(k))
+!           write(iulog,*) 'pathfrac_decomp_cascade = ',pathfrac_decomp_cascade(c,j,k)
+!       endif
                   p_decomp_cpool_loss(c,j,k) = decomp_cpools_vr(c,j,cascade_donor_pool(k)) &
                        * decomp_k(c,j,cascade_donor_pool(k))  * pathfrac_decomp_cascade(c,j,k)
+!       if ( GetGlobalIndex(c,'column') == 1999 .and. j == 1 .and. k==1 ) then
+!           write(iulog,*) 'fraction of the carbon loss:'
+!           write(iulog,*) 'p_decomp_cpool_loss = ',p_decomp_cpool_loss(c,j,k)
+!       endif
                   if ( .not. floating_cn_ratio_decomp_pools(cascade_receiver_pool(k)) ) then  !! not transition of cwd to litter
 
                      if (cascade_receiver_pool(k) /= i_atm ) then  ! not 100% respiration
@@ -185,11 +197,31 @@ contains
                            ratio = cn_decomp_pools(c,j,cascade_receiver_pool(k))/cn_decomp_pools(c,j,cascade_donor_pool(k))
                         endif
 
+!       if ( GetGlobalIndex(c,'column') == 1999 .and. j == 1 .and. k==1 ) then
+!           write(iulog,*) 'not 100% respiration:'
+!           write(iulog,*) 'p_decomp_cpool_loss = ',p_decomp_cpool_loss(c,j,k)
+!           write(iulog,*) 'rf_decomp_cascade = ',rf_decomp_cascade(c,j,k)
+!           write(iulog,*) 'ratio = ',ratio
+!           write(iulog,*) 'cn_decomp_pools = ',cn_decomp_pools(c,j,cascade_receiver_pool(k))
+!       endif
                         pmnf_decomp_cascade(c,j,k) = (p_decomp_cpool_loss(c,j,k) * (1.0_r8 - rf_decomp_cascade(c,j,k) - ratio) &
                              / cn_decomp_pools(c,j,cascade_receiver_pool(k)) )
+!       if ( GetGlobalIndex(c,'column') == 1999 .and. j == 1 .and. k==1 ) then
+!           write(iulog,*) 'not 100% respiration:'
+!           write(iulog,*) 'pmnf_decomp_cascade = ',pmnf_decomp_cascade(c,j,k)
+!       endif
 
                      else   ! 100% respiration
+!       if ( GetGlobalIndex(c,'column') == 1999 .and. j == 1 .and. k==1 ) then
+!           write(iulog,*) '100% respiration:'
+!           write(iulog,*) 'p_decomp_cpool_loss = ',p_decomp_cpool_loss(c,j,k)
+!           write(iulog,*) 'cn_decomp_pools = ',cn_decomp_pools(c,j,cascade_donor_pool(k))
+!       endif
                         pmnf_decomp_cascade(c,j,k) = - p_decomp_cpool_loss(c,j,k) / cn_decomp_pools(c,j,cascade_donor_pool(k))
+!       if ( GetGlobalIndex(c,'column') == 1999 .and. j == 1 .and. k==1 ) then
+!           write(iulog,*) '100% respiration:'
+!           write(iulog,*) 'pmnf_decomp_cascade = ',pmnf_decomp_cascade(c,j,k)
+!       endif
                      endif
 
                   else   ! CWD -> litter
@@ -214,7 +246,18 @@ contains
             do fc = 1,num_soilc
                c = filter_soilc(fc)
                if (pmnf_decomp_cascade(c,j,k) > 0._r8) then
+!       if ( GetGlobalIndex(c,'column') == 1999 .and. j == 1 .and. k==1 ) then
+!           write(iulog,*) 'pmnf_decomp_cascade is positive:'
+!           write(iulog,*) 'pmnf_decomp_cascade = ',pmnf_decomp_cascade(c,j,k)
+!           write(iulog,*) 'immob = ',immob(c,j)
+!           write(iulog,*) 'k = ',k
+!       endif
                   immob(c,j) = immob(c,j) + pmnf_decomp_cascade(c,j,k)
+!       if ( GetGlobalIndex(c,'column') == 1999 .and. j == 1 .and. k==1 ) then
+!           write(iulog,*) 'immob is:'
+!           write(iulog,*) 'immob = ',immob(c,j)
+!           write(iulog,*) 'ndecomp_cascade_transitions = ',ndecomp_cascade_transitions
+!       endif
                else
                   gross_nmin_vr(c,j) = gross_nmin_vr(c,j) - pmnf_decomp_cascade(c,j,k)
                end if
@@ -226,6 +269,10 @@ contains
          do fc = 1,num_soilc
             c = filter_soilc(fc)
             potential_immob_vr(c,j) = immob(c,j)
+!       if ( GetGlobalIndex(c,'column') == 1999 .and. j == 1 ) then
+!           write(iulog,*) 'potential_immob_vr is:'
+!           write(iulog,*) 'potential_immob_vr = ',potential_immob_vr(c,j)
+!       endif
          end do
       end do
    else  ! use_fates

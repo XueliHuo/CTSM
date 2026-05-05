@@ -217,12 +217,14 @@ contains
        this%root_conductance_patch(begp:endp,:) = spval
        call hist_addfld2d (fname='KROOT', units='1/s', type2d='levsoi', &
           avgflag='A', long_name='root conductance each soil layer', &
-          ptr_patch=this%root_conductance_patch, default='inactive')
+          ptr_patch=this%root_conductance_patch, default='active')
+!          ptr_patch=this%root_conductance_patch, default='inactive')
 
        this%soil_conductance_patch(begp:endp,:) = spval
        call hist_addfld2d (fname='KSOIL', units='1/s', type2d='levsoi', &
           avgflag='A', long_name='soil conductance in each soil layer', &
-          ptr_patch=this%soil_conductance_patch, default='inactive')
+          ptr_patch=this%soil_conductance_patch, default='active')
+!          ptr_patch=this%soil_conductance_patch, default='inactive')
 
     if (use_cn) then
        this%bsw_col(begc:endc,:) = spval 

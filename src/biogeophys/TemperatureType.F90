@@ -332,7 +332,8 @@ contains
     data2dptr => this%t_soisno_col(:,-nlevsno+1:0)
     call hist_addfld2d (fname='SNO_T', units='K', type2d='levsno',  &
          avgflag='A', long_name='Snow temperatures', &
-         ptr_col=data2dptr, no_snow_behavior=no_snow_normal, default='inactive')
+         ptr_col=data2dptr, no_snow_behavior=no_snow_normal)
+!         ptr_col=data2dptr, no_snow_behavior=no_snow_normal, default='inactive')
 
     call hist_addfld2d (fname='SNO_T_ICE', units='K', type2d='levsno',  &
          avgflag='A', long_name='Snow temperatures (ice landunits only)', &
@@ -614,10 +615,12 @@ contains
     if(use_luna)then
          call hist_addfld1d (fname='TVEGD10', units='Kelvin', &
             avgflag='A', long_name='10 day running mean of patch daytime vegetation temperature', &
-            ptr_patch=this%t_veg10_day_patch, default='inactive')
+            ptr_patch=this%t_veg10_day_patch, default='active')
+!            ptr_patch=this%t_veg10_day_patch, default='inactive')
          call hist_addfld1d (fname='TVEGN10', units='Kelvin', &
             avgflag='A', long_name='10 day running mean of patch night-time vegetation temperature', &
-            ptr_patch=this%t_veg10_night_patch, default='inactive')
+            ptr_patch=this%t_veg10_night_patch, default='active')
+!            ptr_patch=this%t_veg10_night_patch, default='inactive')
     endif
 
 

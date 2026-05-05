@@ -13,7 +13,7 @@ module BalanceCheckMod
   use clm_varctl         , only : iulog
   use clm_varcon         , only : namep, namec
   use clm_varpar         , only : nlevsoi
-  use GetGlobalValuesMod , only : GetGlobalIndex
+!  use GetGlobalValuesMod , only : GetGlobalIndex
   use atm2lndType        , only : atm2lnd_type
   use EnergyFluxType     , only : energyflux_type
   use SolarAbsorbedType  , only : solarabs_type

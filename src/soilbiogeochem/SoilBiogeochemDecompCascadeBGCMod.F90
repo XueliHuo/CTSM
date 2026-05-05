@@ -26,6 +26,7 @@ module SoilBiogeochemDecompCascadeBGCMod
   use ColumnType                         , only : col                
   use GridcellType                       , only : grc
   use SoilBiogeochemStateType            , only : get_spinup_latitude_term
+  use GetGlobalValuesMod, only : GetGlobalIndex, GetGlobalWrite
 
   !
   implicit none
@@ -916,8 +917,23 @@ contains
                   c = filter_soilc(fc)
                   if (t_soisno(c,j) >= SHR_CONST_TKFRZ) then
                      t_scalar(c,j)= (Q10**((t_soisno(c,j)-(SHR_CONST_TKFRZ+25._r8))/10._r8))
+!       if ( GetGlobalIndex(c,'column') == 1999 .and. j == 1 ) then
+!           write(iulog,*) 'soil temperature is:'
+!           write(iulog,*) 't_scalar = ', t_scalar(c,j)
+!           write(iulog,*) 'Q10 = ',Q10
+!           write(iulog,*) 't_soisno = ', t_soisno(c,j)
+!           write(iulog,*) 'SHR_CONST_TKFRZ = ',SHR_CONST_TKFRZ
+!       endif
                   else
                      t_scalar(c,j)= (Q10**(-25._r8/10._r8))*(froz_q10**((t_soisno(c,j)-SHR_CONST_TKFRZ)/10._r8))
+!       if ( GetGlobalIndex(c,'column') == 1999 .and. j == 1 ) then
+!           write(iulog,*) 'soil temperature is:'
+!           write(iulog,*) 't_scalar = ', t_scalar(c,j)
+!           write(iulog,*) 'Q10 = ',Q10
+!           write(iulog,*) 'froz_q10 = ', froz_q10
+!           write(iulog,*) 't_soisno = ', t_soisno(c,j)
+!           write(iulog,*) 'SHR_CONST_TKFRZ = ',SHR_CONST_TKFRZ
+!       endif
                   endif
                end do
             end do
@@ -928,6 +944,14 @@ contains
                do fc = 1,num_soilc
                   c = filter_soilc(fc)
                   t_scalar(c,j)= max(catanf(t_soisno(c,j)-SHR_CONST_TKFRZ)/catanf_30, 0.01_r8)
+!       if ( GetGlobalIndex(c,'column') == 1999 .and. j == 1 ) then
+!           write(iulog,*) 'soil temperature is:'
+!           write(iulog,*) 't_scalar = ', t_scalar(c,j)
+!           write(iulog,*) 't_soisno = ', t_soisno(c,j)
+!           write(iulog,*) 'SHR_CONST_TKFRZ = ',SHR_CONST_TKFRZ
+!           write(iulog,*) 'catanf = ',catanf(t_soisno(c,j)-SHR_CONST_TKFRZ)
+!           write(iulog,*) 'catanf_30 = ',catanf_30
+!       endif
                end do
             end do
 
@@ -981,7 +1005,19 @@ contains
          do j = 1, nlevdecomp
             do fc = 1,num_soilc
                c = filter_soilc(fc)
+!       if ( GetGlobalIndex(c,'column') == 1999 .and. j == 1 ) then
+!           write(iulog,*) 'soil temperature is:'
+!           write(iulog,*) 't_scalar = ', t_scalar(c,j)
+!           write(iulog,*) 'normalization_factor = ',normalization_factor
+!           write(iulog,*) 'catanf(normalization_tref) = ', catanf(normalization_tref)
+!           write(iulog,*) 'catanf_30 = ',catanf_30
+!           write(iulog,*) 'q10 = ',q10
+!       endif
                t_scalar(c,j) = t_scalar(c,j) * normalization_factor
+!       if ( GetGlobalIndex(c,'column') == 1999 .and. j == 1 ) then
+!           write(iulog,*) 'soil temperature is:'
+!           write(iulog,*) 't_scalar = ', t_scalar(c,j)
+!       endif
             end do
          end do
       endif
@@ -1002,8 +1038,22 @@ contains
          do j = 1,nlevdecomp
             do fc = 1,num_soilc
                c = filter_soilc(fc)
+!       if ( GetGlobalIndex(c,'column') == 1999 .and. j == 1 ) then
+!           write(iulog,*) 'decomposing rate is:'
+!           write(iulog,*) 'decomp_k = ',decomp_k(c,j,i_litr1)
+!           write(iulog,*) 'k_l1 = ',k_l1
+!           write(iulog,*) 't_scalar = ', t_scalar(c,j)
+!           write(iulog,*) 'w_scalar = ',w_scalar(c,j)
+!           write(iulog,*) 'depth_scalar = ', depth_scalar(c,j)
+!           write(iulog,*) 'o_scalar = ',o_scalar(c,j)
+!           write(iulog,*) 'spinup_geogterm_l1 = ',spinup_geogterm_l1(c)
+!       endif
                decomp_k(c,j,i_litr1) = k_l1    * t_scalar(c,j) * w_scalar(c,j) * depth_scalar(c,j) * o_scalar(c,j) &
                                        * spinup_geogterm_l1(c)
+!       if ( GetGlobalIndex(c,'column') == 1999 .and. j == 1 ) then
+!           write(iulog,*) 'decomposing rate is:'
+!           write(iulog,*) 'decomp_k = ',decomp_k(c,j,i_litr1)
+!       endif
                decomp_k(c,j,i_litr2) = k_l2_l3 * t_scalar(c,j) * w_scalar(c,j) * depth_scalar(c,j) * o_scalar(c,j) &
                                        * spinup_geogterm_l23(c)
                decomp_k(c,j,i_litr3) = k_l2_l3 * t_scalar(c,j) * w_scalar(c,j) * depth_scalar(c,j) * o_scalar(c,j) &

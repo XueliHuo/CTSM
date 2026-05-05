@@ -21,6 +21,7 @@ module WaterStateType
   use WaterInfoBaseType, only : water_info_base_type
   use WaterTracerContainerType, only : water_tracer_container_type
   use WaterTracerUtils, only : AllocateVar1d, AllocateVar2d
+!  use GetGlobalValuesMod, only : GetGlobalIndex, GetGlobalWrite
   !
   implicit none
   save
@@ -721,12 +722,23 @@ contains
     do fc = 1, num_c
        c = filter_c(fc)
        h2osno_total(c) = this%h2osno_no_layers_col(c)
+!       if ( GetGlobalIndex(c,'column') == 1715 ) then
+!           write(iulog,*) 'CalculateTotalH2osno:'
+!           write(iulog,*) 'h2osno_no_layers_col ',this%h2osno_no_layers_col(c)
+!           write(iulog,*) 'h2osno_total ',h2osno_total(c)
+!       endif
 
        do j = col%snl(c)+1, 0
           h2osno_total(c) = &
                h2osno_total(c) + &
                this%h2osoi_ice_col(c,j) + &
                this%h2osoi_liq_col(c,j)
+!       if ( GetGlobalIndex(c,'column') == 1715 ) then
+!           write(iulog,*) 'CalculateTotalH2osno: j ',j
+!           write(iulog,*) 'h2osoi_ice_col ',this%h2osoi_ice_col(c,j)
+!           write(iulog,*) 'h2osoi_liq_col ',this%h2osoi_liq_col(c,j)
+!           write(iulog,*) 'h2osno_total ',h2osno_total(c)
+!       endif
        end do
     end do
 

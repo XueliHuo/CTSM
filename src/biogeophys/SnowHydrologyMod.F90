@@ -42,6 +42,7 @@ module SnowHydrologyMod
   use LakeCon         , only : lsadz
   use NumericsMod     , only : truncate_small_values_one_lev
   use WaterTracerUtils, only : CalcTracerFromBulk, CalcTracerFromBulkMasked
+!  use GetGlobalValuesMod, only : GetGlobalIndex, GetGlobalWrite
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -563,7 +564,18 @@ contains
        c = filter_c(fc)
 
        if (snl(c) == 0) then
+!       if ( GetGlobalIndex(c,'column') == 1715 ) then
+!           write(iulog,*) 'UpdateState_AddNewSnow:'
+!           write(iulog,*) 'h2osno_no_layers ',h2osno_no_layers(c)
+!           write(iulog,*) 'qflx_snow_grnd  ',qflx_snow_grnd(c)
+!           write(iulog,*) 'dtime  ',dtime
+!           write(iulog,*) 'qflx_snow_grnd*dtime ',qflx_snow_grnd(c)*dtime
+!       endif
           h2osno_no_layers(c) = h2osno_no_layers(c) + (qflx_snow_grnd(c) * dtime)
+!       if ( GetGlobalIndex(c,'column') == 1715 ) then
+!           write(iulog,*) 'UpdateState_AddNewSnow after h2osno_no_layers is updated:'
+!           write(iulog,*) 'h2osno_no_layers ',h2osno_no_layers(c)
+!       endif
        else
           ! The change of ice partial density of surface node due to precipitation. Only
           ! ice part of snowfall is added here, the liquid part will be added later.
@@ -866,6 +878,13 @@ contains
                frac_sno_eff(c)*snow_depth(c) >= (dzmin(1) + lsadz) .and. &
                qflx_snow_grnd(c) > 0.0_r8)
        else
+!       if ( GetGlobalIndex(c,'column') == 1715 ) then
+!           write(iulog,*) 'BuildFilter_SnowpackInitialized:'
+!           write(iulog,*) 'frac_sno_eff ',frac_sno_eff(c)
+!           write(iulog,*) 'snow_depth ',snow_depth(c)
+!           write(iulog,*) 'frac_sno_eff*snow_depth ',frac_sno_eff(c)*snow_depth(c)
+!           write(iulog,*) 'dzmin ',dzmin(1)
+!       endif
           snowpack_initialized(c) = ( &
                snl(c) == 0 .and. &
                frac_sno_eff(c)*snow_depth(c) >= dzmin(1))
@@ -910,9 +929,17 @@ contains
     do fc = 1, snowpack_initialized_filterc%num
        c = snowpack_initialized_filterc%indices(fc)
 
+!       if ( GetGlobalIndex(c,'column') == 1715 ) then
+!           write(iulog,*) 'UpdateState_InitializeSnowPack:'
+!           write(iulog,*) 'h2osno_no_layers ',h2osno_no_layers(c)
+!       endif
        h2osoi_ice(c,0) = h2osno_no_layers(c)
        h2osoi_liq(c,0) = 0._r8
        h2osno_no_layers(c) = 0._r8
+!       if ( GetGlobalIndex(c,'column') == 1715 ) then
+!           write(iulog,*) 'UpdateState_InitializeSnowPack:'
+!           write(iulog,*) 'h2osno_no_layers ',h2osno_no_layers(c)
+!       endif
     end do
 
   end subroutine UpdateState_InitializeSnowPack
@@ -969,6 +996,12 @@ contains
        ! This value of frac_iceold makes sense together with the state initialization:
        ! h2osoi_ice is non-zero, while h2osoi_liq is zero.
        frac_iceold(c,0) = 1._r8
+!       if ( GetGlobalIndex(c,'column') == 1715 ) then
+!           write(iulog,*) 'Bulk_InitializeSnowPack:'
+!           write(iulog,*) 'snl ',snl(c)
+!           write(iulog,*) 'snow_depth ',snow_depth(c)
+!           write(iulog,*) 'dz ',dz(c,0)
+!       endif
     end do
 
   end subroutine Bulk_InitializeSnowPack
@@ -1183,13 +1216,40 @@ contains
        h2osoi_ice_top_orig(c) = h2osoi_ice(c,lev_top(c))
        h2osoi_liq_top_orig(c) = h2osoi_liq(c,lev_top(c))
 
+!       if ( GetGlobalIndex(c,'column') == 1378 ) then
+!           write(iulog,*) 'UpdateState_TopLayerFluxes. The column is:'
+!           call GetGlobalWrite(c,'column')
+!           write(iulog,*) 'h2osoi_ice ',h2osoi_ice(c,lev_top(c))
+!       endif
        h2osoi_ice(c,lev_top(c)) = h2osoi_ice(c,lev_top(c)) &
             + frac_sno_eff(c) * (qflx_soliddew_to_top_layer(c) &
             - qflx_solidevap_from_top_layer(c)) * dtime
+!       if ( GetGlobalIndex(c,'column') == 1378 ) then
+!           write(iulog,*) 'UpdateState_TopLayerFluxes. The column is:'
+!           call GetGlobalWrite(c,'column')
+!           write(iulog,*) 'h2osoi_ice ',h2osoi_ice(c,lev_top(c))
+!           write(iulog,*) 'frac_sno_eff = ',frac_sno_eff(c)
+!           write(iulog,*) 'qflx_soliddew_to_top_layer = ',qflx_soliddew_to_top_layer(c)
+!           write(iulog,*) 'qflx_solidevap_from_top_layer = ',qflx_solidevap_from_top_layer(c)
+!       endif
 
+!       if ( GetGlobalIndex(c,'column') == 1378 ) then
+!           write(iulog,*) 'UpdateState_TopLayerFluxes. The column is:'
+!           call GetGlobalWrite(c,'column')
+!           write(iulog,*) 'h2osoi_liq ',h2osoi_liq(c,lev_top(c))
+!       endif
        h2osoi_liq(c,lev_top(c)) = h2osoi_liq(c,lev_top(c)) +  &
             frac_sno_eff(c) * (qflx_liq_grnd(c) + qflx_liqdew_to_top_layer(c) &
             - qflx_liqevap_from_top_layer(c)) * dtime
+!       if ( GetGlobalIndex(c,'column') == 1378 ) then
+!           write(iulog,*) 'UpdateState_TopLayerFluxes. The column is:'
+!           call GetGlobalWrite(c,'column')
+!           write(iulog,*) 'h2osoi_liq ',h2osoi_liq(c,lev_top(c))
+!           write(iulog,*) 'frac_sno_eff = ',frac_sno_eff(c)
+!           write(iulog,*) 'qflx_liq_grnd = ',qflx_liq_grnd(c)
+!           write(iulog,*) 'qflx_liqdew_to_top_layer = ',qflx_liqdew_to_top_layer(c)
+!           write(iulog,*) 'qflx_liqevap_from_top_layer = ',qflx_liqevap_from_top_layer(c)
+!       endif
     end do
 
     ! If states were supposed to go to 0 but instead ended up near-0 (positive or
@@ -2268,6 +2328,13 @@ contains
              ! wanted to use that routine to calculate h2osno_total here, we would need
              ! to first call ZeroEmptySnowLayers.
              h2osno_total(c) = h2osno_total(c) + h2osoi_ice_bulk(c,j) + h2osoi_liq_bulk(c,j)
+!       if ( GetGlobalIndex(c,'column') == 1378 ) then
+!           write(iulog,*) 'CombineSnowLayers. The column is:'
+!           call GetGlobalWrite(c,'column')
+!           write(iulog,*) 'j = ',j
+!           write(iulog,*) 'h2osoi_ice_bulk = ',h2osoi_ice_bulk(c,j)
+!           write(iulog,*) 'h2osoi_liq_bulk = ',h2osoi_liq_bulk(c,j)
+!       endif
           end if
        end do
     end do

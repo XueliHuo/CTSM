@@ -37,6 +37,7 @@ module lnd2atmMod
   use LandunitType         , only : lun
   use GridcellType         , only : grc                
   use landunit_varcon      , only : istice_mec
+  use GetGlobalValuesMod, only : GetGlobalIndex, GetGlobalWrite
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -76,7 +77,7 @@ contains
     type(lnd2atm_type)    , intent(inout) :: lnd2atm_inst 
     !
     ! !LOCAL VARIABLES:
-    integer  :: i,g                                   ! index
+    integer  :: i,g,c                                   ! index
     type(filter_col_type) :: filter_active_c          ! filter for active columns
     real(r8) :: h2osno_total(bounds%begc:bounds%endc) ! total snow water (mm H2O)
     real(r8), parameter :: amC   = 12.0_r8          ! Atomic mass number for Carbon
@@ -111,7 +112,13 @@ contains
             h2osno_total(bounds%begc:bounds%endc), &
             bulk_or_tracer%waterlnd2atm_inst%h2osno_grc(bounds%begg:bounds%endg), &
             c2l_scale_type= 'urbanf', l2g_scale_type='unity')
-
+!       do c = bounds%begc,bounds%endc
+!       if ( GetGlobalIndex(c,'column') >= 1378 .and. GetGlobalIndex(c,'column') <=1384 ) then
+!           write(iulog,*) 'lnd2atmMod h2osno_grc debugging. The column identified is:'
+!           call GetGlobalWrite(c,'column')
+!           write(iulog,*) 'h2osno_total = ',h2osno_total(c)
+!       endif
+!       end do
        do g = bounds%begg,bounds%endg
           bulk_or_tracer%waterlnd2atm_inst%h2osno_grc(g) = &
                bulk_or_tracer%waterlnd2atm_inst%h2osno_grc(g)/1000._r8

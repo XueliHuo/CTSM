@@ -23,6 +23,7 @@ module SoilFluxesMod
   use LandunitType	, only : lun                
   use ColumnType	, only : col                
   use PatchType		, only : patch                
+!  use GetGlobalValuesMod, only : GetGlobalIndex
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -179,11 +180,26 @@ contains
             t_grnd0(c) = frac_sno_eff(c) * tssbef(c,col%snl(c)+1) &
                  + (1 - frac_sno_eff(c) - frac_h2osfc(c)) * tssbef(c,1) &
                  + frac_h2osfc(c) * t_h2osfc_bef(c)
+!       if ( GetGlobalIndex(c,'column') == 1378 ) then
+!           write(iulog,*) 'SoilFluxes difference in soil temperature::'
+!           write(iulog,*) 'frac_sno_eff = ',frac_sno_eff(c)
+!           write(iulog,*) 'tssbef = ',tssbef(c,col%snl(c)+1)
+!           write(iulog,*) 'frac_h2osfc = ',frac_h2osfc(c)
+!           write(iulog,*) 'tssbef(c,1) = ',tssbef(c,1)
+!           write(iulog,*) 't_h2osfc_bef = ',t_h2osfc_bef(c)
+!           write(iulog,*) 't_grnd0 = ',t_grnd0(c)
+!       endif
          else
             t_grnd0(c) = (1 - frac_h2osfc(c)) * tssbef(c,1) + frac_h2osfc(c) * t_h2osfc_bef(c)
          endif
 
          tinc(c) = t_grnd(c) - t_grnd0(c)
+!       if ( GetGlobalIndex(c,'column') == 1999 ) then
+!           write(iulog,*) 'SoilFluxes difference in soil temperature::'
+!           write(iulog,*) 'tinc = ',tinc(c)
+!           write(iulog,*) 't_grnd = ',t_grnd(c)
+!           write(iulog,*) 't_grnd0 = ',t_grnd0(c)
+!       endif
 
          ! Determine ratio of topsoil_evap_tot
 
@@ -217,7 +233,17 @@ contains
             qflx_ev_h2osfc(p) = 0._r8
             qflx_ev_snow(p) = qflx_evap_soi(p)
          else
+!       if ( GetGlobalIndex(c,'column') == 1378 ) then
+!           write(iulog,*) 'SoilFluxes:'
+!           write(iulog,*) 'qflx_ev_snow = ',qflx_ev_snow(p)
+!       endif
             qflx_ev_snow(p) = qflx_ev_snow(p) + tinc(c)*cgrndl(p)
+!       if ( GetGlobalIndex(c,'column') == 1378 ) then
+!           write(iulog,*) 'SoilFluxes:'
+!           write(iulog,*) 'qflx_ev_snow = ',qflx_ev_snow(p)
+!           write(iulog,*) 'tinc = ',tinc(c)
+!           write(iulog,*) 'cgrndl = ',cgrndl(p)
+!       endif
             qflx_ev_soil(p) = qflx_ev_soil(p) + tinc(c)*cgrndl(p)
             qflx_ev_h2osfc(p) = qflx_ev_h2osfc(p) + tinc(c)*cgrndl(p)
          endif
@@ -272,6 +298,11 @@ contains
             qflx_evap_soi(p) = qflx_evap_soi(p) * egirat(c)
             eflx_sh_grnd(p) = eflx_sh_grnd(p) + (save_qflx_evap_soi - qflx_evap_soi(p))*htvp(c)
             qflx_ev_snow(p) = qflx_ev_snow(p) * egirat(c)
+!       if ( GetGlobalIndex(c,'column') == 1378 ) then
+!           write(iulog,*) 'SoilFluxes:'
+!           write(iulog,*) 'egirat = ',egirat(c)
+!           write(iulog,*) 'qflx_ev_snow = ',qflx_ev_snow(p)
+!       endif
             qflx_ev_soil(p) = qflx_ev_soil(p) * egirat(c)
             qflx_ev_h2osfc(p) = qflx_ev_h2osfc(p) * egirat(c)
          end if
@@ -445,11 +476,32 @@ contains
             lw_grnd=(frac_sno_eff(c)*tssbef(c,col%snl(c)+1)**4 &
                  +(1._r8-frac_sno_eff(c)-frac_h2osfc(c))*tssbef(c,1)**4 &
                  +frac_h2osfc(c)*t_h2osfc_bef(c)**4)
+!       if ( GetGlobalIndex(p,'pft') == 3230 ) then
+!           write(iulog,*) 'longwave radiation from ground is:'
+!           write(iulog,*) 'lw_grnd = ',lw_grnd
+!           write(iulog,*) 'frac_sno_eff = ',frac_sno_eff(c)
+!           write(iulog,*) 'tssbef = ',tssbef(c,col%snl(c)+1)
+!           write(iulog,*) 'frac_h2osfc = ',frac_h2osfc(c)
+!           write(iulog,*) 'tssbef(c,1) = ',tssbef(c,1)
+!           write(iulog,*) 't_h2osfc_bef = ',t_h2osfc_bef(c)
+!       endif
 
             eflx_lwrad_out(p) = ulrad(p) &
                  + (1-frac_veg_nosno(p))*(1.-emg(c))*forc_lwrad(c) &
                  + (1-frac_veg_nosno(p))*emg(c)*sb*lw_grnd &
                  + 4._r8*emg(c)*sb*t_grnd0(c)**3*tinc(c)
+!       if ( GetGlobalIndex(p,'pft') == 3230 ) then
+!           write(iulog,*) 'Net longwave radiation is:'
+!           write(iulog,*) 'eflx_lwrad_out = ',eflx_lwrad_out(p)
+!           write(iulog,*) 'ulrad = ',ulrad(p)
+!           write(iulog,*) 'frac_veg_nosno = ',frac_veg_nosno(p)
+!           write(iulog,*) 'emg = ',emg(c)
+!           write(iulog,*) 'forc_lwrad = ',forc_lwrad(c)
+!           write(iulog,*) 'sb = ',sb
+!           write(iulog,*) 'lw_grnd = ',lw_grnd
+!           write(iulog,*) 't_grnd0 = ',t_grnd0(c)
+!           write(iulog,*) 'tinc = ',tinc(c)
+!       endif
 
 
             ! Calculate the skin temperature as a weighted sum of all the surface contributions (surface water table, snow, etc...)
@@ -463,6 +515,12 @@ contains
              if(frac_veg_nosno(p).eq.0)  t_skin_patch(p) = sqrt(sqrt(lw_grnd))
 
             eflx_lwrad_net(p) = eflx_lwrad_out(p) - forc_lwrad(c)
+!       if ( GetGlobalIndex(p,'pft') == 3230 ) then
+!           write(iulog,*) 'Net longwave radiation is:'
+!           write(iulog,*) 'eflx_lwrad_net = ',eflx_lwrad_net(p)
+!           write(iulog,*) 'eflx_lwrad_out = ',eflx_lwrad_out(p)
+!           write(iulog,*) 'forc_lwrad = ',forc_lwrad(c)
+!       endif
             if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
                eflx_lwrad_net_r(p) = eflx_lwrad_out(p) - forc_lwrad(c)
                eflx_lwrad_out_r(p) = eflx_lwrad_out(p)

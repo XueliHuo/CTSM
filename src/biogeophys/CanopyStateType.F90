@@ -187,7 +187,8 @@ contains
        this%fsun_patch(begp:endp) = spval
        call hist_addfld1d (fname='FSUN', units='proportion', &
             avgflag='A', long_name='sunlit fraction of canopy', &
-            ptr_patch=this%fsun_patch, default='inactive')
+            ptr_patch=this%fsun_patch, default='active')
+!            ptr_patch=this%fsun_patch, default='inactive')
 
        this%htop_patch(begp:endp) = spval
        call hist_addfld1d (fname='HTOP', units='m', &
